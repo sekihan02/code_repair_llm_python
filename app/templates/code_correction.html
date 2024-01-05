@@ -1,0 +1,148 @@
+<!-- app/templates/code_correction.html -->
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>コード修正</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/code_correction.css') }}">
+    <script src="{{ url_for('static', filename='js/code_correction.js') }}"></script>
+</head>
+<body>
+    <h1>コード修正</h1>
+    <form id="correction-form" action="/process-correction" method="post" enctype="multipart/form-data">
+        <label for="request">修正したいコード:</label>
+        <!-- <input type="text" id="request" name="request"><br> -->
+        <textarea id="request" name="request"></textarea><br>
+        <!-- <label for="language">言語:</label>
+        <textarea id="language" name="language"></textarea><br> -->
+        <label for="language">言語:</label>
+        <select id="language" name="language">
+            <option value="python">Python</option>
+            <option value="html">HTML</option>
+            <option value="javascript">JavaScript</option>
+        </select><br>
+
+        <label for="error-log">エラーログ:</label>
+        <textarea id="error-log" name="error-log"></textarea><br>
+        <label for="before-error-code">過去修正コード:</label>
+        <textarea id="before-error-code" name="before-error-code"></textarea><br>
+        <label for="file">コードファイル:</label>
+        <input type="file" id="file" name="file"><br>
+        <input type="submit" value="修正開始">
+    </form>
+
+    <div id="loading" style="display: none;">ローディング中...</div>
+    
+    <div id="logs"></div>
+    <!-- <button id="copy-button" style="position: absolute; top: 10px; right: 10px;">内容をコピー</button> -->
+    <button id="copy-button" style="position: absolute;">内容をコピー</button>
+
+    <script>
+        // テキストエリアの高さを調整する関数
+        function adjustTextareaHeight(textarea) {
+            textarea.style.height = 'auto'; // 一旦高さをリセット
+            textarea.style.height = textarea.scrollHeight + 'px'; // 新しい高さを設定
+        }
+
+        // 各テキストエリアに対してイベントリスナーを設定
+        document.querySelectorAll('textarea').forEach(textarea => {
+            adjustTextareaHeight(textarea); // 初期読み込み時に高さを調整
+            textarea.addEventListener('input', () => {
+                adjustTextareaHeight(textarea); // 入力時に高さを調整
+            });
+        });
+
+        document.getElementById('correction-form').onsubmit = function(event) {
+            event.preventDefault();
+            var formData = new FormData(this);
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", "/process-correction", true);
+            xhr.setRequestHeader("Accept", "application/json");
+    
+            // ローディング表示
+            document.getElementById('loading').style.display = 'block';
+    
+            xhr.onload = function() {
+                // ローディング非表示
+                document.getElementById('loading').style.display = 'none';
+    
+                if (this.status === 200) {
+                    var response = JSON.parse(this.responseText);
+                    // document.getElementById('logs').innerHTML = response.text;
+                    var formattedText = response.text.replace(/\n/g, '<br>'); // 改行を <br> に置換
+                    document.getElementById('logs').innerHTML = formattedText;
+
+                    // フォームデータの内容を確認するためのデバッグ（必要に応じて削除）
+                    for (var pair of formData.entries()) {
+                        console.log(pair[0]+ ', ' + pair[1]);
+                    }
+                } else {
+                    console.error('Error:', this.statusText);
+                }
+            };
+    
+            xhr.send(formData);
+        };
+
+        document.getElementById('copy-button').onclick = function() {
+            var logsContent = document.getElementById('logs').innerText;
+            navigator.clipboard.writeText(logsContent).then(function() {
+                console.log('内容がクリップボードにコピーされました');
+            }, function(err) {
+                console.error('コピーに失敗しました:', err);
+            });
+        };
+    </script>
+
+    <!-- Pythonコード実行のためのフォームは不要になるため削除 -->
+
+    <label for="python-output">エラーログ:</label>
+    <div id="python-output-container">
+        <div id="python-output"></div>
+        <div id="test-result"></div>
+    </div>
+    
+    <script>
+        document.getElementById('correction-form').onsubmit = function(event) {
+            event.preventDefault();
+            var formData = new FormData(this);
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", "/process-correction", true);
+            xhr.setRequestHeader("Accept", "application/json");
+    
+            // ...
+    
+            xhr.onload = function() {
+                // ...
+    
+                if (this.status === 200) {
+                    var response = JSON.parse(this.responseText);
+                    document.getElementById('logs').innerHTML = response.text;
+
+                    // 返されたコードを実行するためのリクエスト
+                    executePythonCode(response.text);
+                } else {
+                    console.error('Error:', this.statusText);
+                }
+            };
+    
+            xhr.send(formData);
+        };
+
+        function executePythonCode(code) {
+            fetch('/execute-python', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'code=' + encodeURIComponent(code)
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('python-output').textContent = data.result;
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+<!-- app/templates/index.html -->
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>ファイルアップロード</title>
+</head>
+<body>
+    <!-- <form action="/" method="post" enctype="multipart/form-data"> -->
+    <form id="upload-form" action="/upload" method="post" enctype="multipart/form-data">
+        <input type="file" name="file">
+        <input type="text" name="request">
+        <input type="submit" value="アップロード">
+    </form>
+    <div id="log"></div> <!-- ログを表示するための領域 -->
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
