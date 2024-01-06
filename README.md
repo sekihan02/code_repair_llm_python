@@ -4,7 +4,7 @@
 
 ## やること
 
-1. コードエラーをLLMを使い実施する
+1. コードエラーをLLMを使い修正する
     - [The Right Prompts for the Job: Repair Code-Review Defects with Large Language Model](https://arxiv.org/abs/2312.17485)の P1, 2, 5, 6 のプロンプト例を参考にエラーログとプログラム言語を指定してエラーコードを修正する
 
 ![llm_code_correction.gif](./llm_code_correction.gif)
